@@ -6,6 +6,7 @@ from euler.lib.divisors import divisors
 from euler.lib.grid import Grid
 from euler.lib.prime import Prime
 from euler.lib.words import Words
+from euler.p67 import p67
 
 
 def p11(n: int):
@@ -231,4 +232,4 @@ def p18():
 
 
 if __name__ == '__main__':
-    p18()
+    p67()
