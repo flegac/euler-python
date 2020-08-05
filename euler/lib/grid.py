@@ -34,3 +34,16 @@ class Grid(object):
     def _parse(raw_data: str, line_parser: LParser):
         lines = [line_parser(_) for _ in raw_data.split('\n')]
         return lines
+
+    def solve_triangle(self, data: List[List[int]] = None):
+        if data is None:
+            data = self.grid.tolist()
+
+        if len(data) == 1:
+            return data[0][0]
+
+        for i in range(len(data[-2])):
+            a = data[-2][i] + data[-1][i]
+            b = data[-2][i] + data[-1][i + 1]
+            data[-2][i] = max(a, b)
+        return self.solve_triangle(data[:-1])
