@@ -1,6 +1,6 @@
 import numpy as np
 
-from euler.lib.binomial import binomial
+from euler.lib.binomial import binomial, fact
 from euler.lib.collatz import Collatz
 from euler.lib.divisors import divisors
 from euler.lib.grid import Grid
@@ -229,6 +229,13 @@ def p18():
     val = Grid(x).solve_triangle()
     print(val)
     return val
+
+
+def p20(n: int):
+    x = fact(n)
+    x = sum([int(_) for _ in str(x)])
+    print(x)
+    return x
 
 
 if __name__ == '__main__':
