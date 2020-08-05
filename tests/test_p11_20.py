@@ -1,4 +1,5 @@
-from euler.p11_20 import p11, p12, p13, p14, p15, p16
+from euler.lib.words import Words
+from euler.p11_20 import p11, p12, p13, p14, p15, p16, p17
 
 
 def test_p11():
@@ -26,3 +27,12 @@ def test_p15():
 def test_p16():
     assert p16(15) == 26
     assert p16(1000) == 1366
+
+
+def test_p17():
+    w = Words()
+    assert w.words(342) == 'three hundred and forty-two'
+    assert w.words(115) == 'one hundred and fifteen'
+
+    assert p17(5) == 19
+    assert p17(1000) == 21124

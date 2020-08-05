@@ -5,6 +5,7 @@ from euler.lib.collatz import Collatz
 from euler.lib.divisors import divisors
 from euler.lib.grid import Grid
 from euler.lib.prime import Prime
+from euler.lib.words import Words
 
 
 def p11(n: int):
@@ -199,6 +200,14 @@ def p16(n: int):
     return res
 
 
+def p17(n: int):
+    w = Words()
+
+    words = map(w.words, range(1, n + 1))
+    total = sum([len(_.replace(' ', '').replace('-', '')) for _ in words])
+    print(total)
+    return total
+
+
 if __name__ == '__main__':
-    p16(15)
-    p16(1000)
+    p17(5)
