@@ -2,7 +2,7 @@ from euler.lib.prime import Prime
 
 
 def test_check():
-    P = Prime(10000)
+    P = Prime()
 
     primes = [11, 31, 6857]
 
