@@ -42,6 +42,10 @@ def test_p18():
     assert p18() == 1074
 
 
+def test_p19():
+    assert False
+
+
 def test_p20():
     assert p20(10) == 27
     assert p20(100) == 648

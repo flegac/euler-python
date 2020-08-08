@@ -1,39 +1,55 @@
-from collections import defaultdict
+import json
 from math import ceil, log2, floor
+from typing import Dict, Iterable
 
 import numpy as np
+from scipy import sparse
+from euler.lib.timer import timer
 
 
 class Graph(object):
     @staticmethod
-    def from_dict(graph: dict):
-        res = Graph()
-        res.graph = graph
-        return res
+    def from_path(path: str):
+        with open(path) as _:
+            return Graph(json.load(_))
 
-    def __init__(self):
-        self.graph = defaultdict(set)
+    def __init__(self, graph: Dict[int, Iterable[int]]):
+        self.graph = {
+            int(k): list(sorted(graph[k]))
+            for k in graph
+        }
+        self.vertices = list(self.graph.keys())
 
-    def link(self, v1: int, v2: int):
-        len(self.graph[v2])
-        self.graph[v1].add(v2)
+    def save(self, path: str):
+        with open(path, 'w') as _:
+            json.dump(self.graph, _, indent=4, sort_keys=True)
 
+    @timer
     def matrix(self) -> np.ndarray:
-        vertices = list(self.graph.keys())
+        vertices = self.vertices
         n = len(self.graph)
-        res = np.zeros((n, n))
+        res = np.zeros((n, n)).astype(np.uint)
         for a in self.graph:
             i = vertices.index(a)
             for b in self.graph[a]:
                 j = vertices.index(b)
-                res[i, j] = 1
+                res[i, j] += 1
         return res
 
 
-def power(matrix: np.ndarray, n: int, modulo: int = None):
+@timer
+def power(M: np.ndarray, n: int, modulo: int = None):
+    M = sparse.csr_matrix(M)
     if n == 0:
-        return matrix
-    power2 = [matrix]
+        return M
+    power2 = [M]  # power2[k] = M^(2^k)
+    k = 1
+    while 2 ** k <= n:
+        m = power2[k - 1]
+        m2 = sparse.csr_matrix(m.dot(m))
+        power2.append(m2)
+        k += 1
+
     for i in range(ceil(log2(n))):
         m = power2[-1].dot(power2[-1])
         if modulo:
@@ -41,7 +57,7 @@ def power(matrix: np.ndarray, n: int, modulo: int = None):
         power2.append(m)
 
     i = 1
-    m = matrix
+    m = M
     while i < n:
         p = floor(log2(n - i))
         i += 2 ** p

@@ -22,8 +22,10 @@ def p21(n: int):
     print(res)
     return res
 
+
 def p22(n: int):
     pass
+
 
 if __name__ == '__main__':
     p21(10_000)
