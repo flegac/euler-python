@@ -1,0 +1,27 @@
+vertices: 13378
+name                : calls     : time
+build_graph         :         1 : 0:00:12.427225
+compute_adjacent    :     13378 : 0:00:11.767935
+_is_impossible      :    120402 : 0:00:09.179723
+full_check          :    907007 : 0:00:08.729879
+matrix              :         1 : 0:00:06.576162
+canonical_form      :     51208 : 0:00:02.340379
+compute_signature   :     50186 : 0:00:00.832124
+from_digits         :    104717 : 0:00:00.199938
+mirror              :     26756 : 0:00:00.154945
+digits              :     26766 : 0:00:00.055899
+
+vertices: 13378
+name                : calls     : time
+build_graph         :         1 : 0:00:12.458792
+compute_adjacent    :     13378 : 0:00:11.827656
+_is_impossible      :    120402 : 0:00:09.072361
+full_check          :    907007 : 0:00:08.632081
+matrix              :         1 : 0:00:06.513617
+canonical_form      :     51208 : 0:00:02.419397
+canonical_all_ok    :     43881 : 0:00:01.209684
+compute_signature   :     50186 : 0:00:00.859473
+canonical_mixed     :     18660 : 0:00:00.321961
+from_digits         :    104717 : 0:00:00.206928
+mirror              :     26756 : 0:00:00.170935
+digits              :     26766 : 0:00:00.055981

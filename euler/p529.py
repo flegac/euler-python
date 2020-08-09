@@ -2,7 +2,7 @@ from itertools import product
 from typing import Tuple, Set
 
 from euler.lib.timer import show_timers
-from euler.problem_529 import P529, mirror
+from euler.prob_529.problem_529 import P529, mirror
 
 
 def partition(number) -> Set[Tuple[int]]:

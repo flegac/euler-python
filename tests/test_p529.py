@@ -1,5 +1,5 @@
 from euler.p529 import digits, from_digits
-from euler.problem_529 import P529
+from euler.prob_529.problem_529 import P529
 
 
 def test_canonical():
