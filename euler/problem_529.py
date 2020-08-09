@@ -11,73 +11,55 @@ class P529(object):
         self.N = n
 
     def item(self, n: int):
-        return Digits(self, n)
+        return Digits(self, digits(n))
 
-    def canonical_all_ok(self, x: List[int]):
-        y = list(reversed(x))
-        for i in range(len(x)):
-            part = y[:i + 1]
-            if self.full_check(part):
-                z = list(reversed(part))
-                return z
+    def canonical_all_ok(self, x: 'Digits'):
+        y = x.mirror()
+        for i in range(len(x.digits)):
+            part = y.slice(last=i + 1)
+            if part.full_check():
+                return part.mirror()
         return x
 
-    def canonical_all_ko(self, x: List[int]):
-        y = list(reversed(x))
+    def canonical_all_ko(self, x: 'Digits'):
+        y = x.mirror()
         tot = 0
-        for i in range(len(y)):
-            tot += y[i]
+        for i in range(len(y.digits)):
+            tot += y.digits[i]
             if tot >= self.N:
-                z = list(reversed(y[:i + 1]))
+                z = y.slice(last=i + 1).mirror()
                 return z
         return x
 
-    def canonical_mixed(self, x: List[int]):
-        y = list(reversed(x))
-        sign = self._signature(y)
+    def canonical_mixed(self, x: 'Digits'):
+        y = x.mirror()
+        sign = y.sgn
         i = sign.index(True)
-        invalid, valid = y[:i], y[i:]
+        invalid, valid = y.slice(last=i), y.slice(first=i)
 
-        if sum(invalid) == self.N - 1:
-            z = list(reversed(invalid))
+        if sum(invalid.digits) == self.N - 1:
+            z = invalid.mirror()
             return z
-        z = invalid + self.canonical_all_ok(valid)
-        z = list(reversed(z))
+        z = Digits(self, invalid.digits + self.canonical_all_ok(valid).digits).mirror()
         return z
 
     @timer
-    def canonical_form(self, x: List[int]):
-        if x == [0]:
+    def canonical_form(self, x: 'Digits'):
+        if x.digits == [0]:
             return x
-        y = list(filter(lambda _: _ != 0, reversed(x)))
+        y = x.clean([0]).mirror()
 
-        if sum(y) <= self.N:
-            return list(reversed(y))
+        if sum(y.digits) <= self.N:
+            return y.mirror()
 
-        if self.full_check(x):
+        if x.full_check():
             z = self.canonical_all_ok(x)
         else:
-            sign = self._signature(y)
-
-            if True in sign:
+            if True in y.sgn:
                 z = self.canonical_mixed(x)
             else:
                 z = self.canonical_all_ko(x)
         return z
-
-    @timer
-    def adjacent(self, x: List[int]):
-        res = {from_digits(x)}
-        for i in self.A:
-            if i == 0:
-                continue
-            y = x + [i]
-            if not self.is_impossible(y):
-                # z = self.canonical_form_backup(y)
-                z = self.canonical_form(y)
-                z = from_digits(z)
-                res.add(z)
-        return res
 
     @timer
     def build_graph(self):
@@ -85,60 +67,21 @@ class P529(object):
         #     return Graph.from_path('graph.json')
         gg = defaultdict(list)
         visited = set()
-        to_visit = set(self.A)
+        to_visit = set(map(self.item, self.A))
         while len(to_visit) > 0:
             x = to_visit.pop()
             visited.add(x)
-            xx = digits(x)
-            # if sum(xx) > self.N:
-            #     print(x)
-            for y in self.adjacent(xx):
+            for y in x.adjacent:
                 gg[x].append(y)
                 if y not in visited:
                     to_visit.add(y)
 
-        g = Graph(gg)
+        g = Graph({
+            k.x: [_.x for _ in v]
+            for k, v in gg.items()
+        })
         g.save('graph.json')
         return g
-
-    @timer
-    def check(self, x: List[int]):
-        return sum(x) == self.N
-
-    @timer
-    def _signature(self, x: List[int]):
-        test = [False] * len(x)
-        for i in range(len(x)):
-            for j in range(i + 1, len(x) + 1):
-                w = x[i:j]
-                if self.check(w):
-                    for a in range(i, j):
-                        test[a] = True
-        return test
-
-    @timer
-    def full_check(self, x: List[int]):
-        x = list(filter(lambda _: _ != 0, x))
-        n = len(x)
-        last = 0
-        for i in range(n):
-            cpt = 0
-            for j in range(i + 1, n + 1):
-                cpt += x[j - 1]
-                if cpt == self.N:
-                    if i > last:
-                        return False
-                    last = j
-        res = last == n
-        return res
-
-    @timer
-    def is_impossible(self, x: List[int]):
-        for i in self.A:
-            w = x + [i]
-            if self.full_check(w):
-                return False
-        return True
 
 
 @timer
@@ -156,7 +99,93 @@ def mirror(x: int):
 
 
 class Digits(object):
-    def __init__(self, problem: P529, x: int):
+    def __init__(self, problem: P529, x: List[int]):
         self.problem = problem
-        self.x = digits(x)
-        self.sgn = problem._signature(self.x)
+        self.x = from_digits(x)
+        self.digits = x
+
+    def __str__(self):
+        return ':'+str(self.x)
+
+    def __lt__(self, other):
+        return self.x < other.x
+
+    def __hash__(self):
+        return self.x
+
+    def __eq__(self, other):
+        return self.x == other.x
+
+    def slice(self, first: int = 0, last: int = None):
+        if last:
+            return Digits(self.problem, self.digits[:last])
+        return Digits(self.problem, self.digits[first:])
+
+    def mirror(self):
+        return Digits(self.problem, list(reversed(self.digits)))
+
+    def clean(self, values: List[int]):
+        if self.digits == [0]:
+            return self
+
+        return Digits(self.problem, list(filter(lambda _: _ not in values, self.digits)))
+
+    @property
+    def adjacent(self):
+        return self.compute_adjacent()
+
+    @timer
+    def compute_adjacent(self):
+        res = {self}
+        for i in self.problem.A:
+            if i == 0:
+                continue
+            y = Digits(self.problem, self.digits + [i])
+            if not y._is_impossible():
+                z = self.problem.canonical_form(y)
+                res.add(z)
+        return res
+
+    @timer
+    def _is_impossible(self):
+        for i in self.problem.A:
+            w = Digits(self.problem, self.digits + [i])
+            if w.full_check():
+                return False
+        return True
+
+    @property
+    def sgn(self):
+        return self.compute_signature()
+
+    @timer
+    def compute_signature(self):
+        x = self.digits
+        test = [False] * len(x)
+        for i in range(len(x)):
+            for j in range(i + 1, len(x) + 1):
+                w = x[i:j]
+                if sum(w) == self.problem.N:
+                    for a in range(i, j):
+                        test[a] = True
+        return test
+
+    @timer
+    def full_check(self):
+        # TODO: check if this is equivalent ?
+        # n = len(self.digits)
+
+        x = self.clean([0])
+        n = len(x.digits)
+
+        last = 0
+        for i in range(n):
+            cpt = 0
+            for j in range(i + 1, n + 1):
+                cpt += x.digits[j - 1]
+                if cpt == self.problem.N:
+                    if i > last:
+                        return False
+                    last = j
+        res = last == n
+        return res

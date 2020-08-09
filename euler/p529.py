@@ -2,7 +2,7 @@ from itertools import product
 from typing import Tuple, Set
 
 from euler.lib.timer import show_timers
-from euler.problem_529 import P529, mirror, digits
+from euler.problem_529 import P529, mirror
 
 
 def partition(number) -> Set[Tuple[int]]:
@@ -69,11 +69,9 @@ n=7 [158940, 50979, 7174, 727, 63, 1]
 
     g = problem.build_graph()
 
-    V = list(map(mirror, sorted(map(mirror, g.vertices))))
+    print('vertices:', len(g.vertices))
 
-    for i, v in enumerate(V):
-        print('{:4d} {}: {}'.format(i, problem.full_check(digits(v)), v))
-    print('vertex:', len(g.vertices))
+    V = list(map(mirror, sorted(map(mirror, g.vertices))))
 
     # pour déterminer si deux états sont identiques :
     # - utiliser la signature (le nombre de VRAI)
