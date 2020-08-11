@@ -3,7 +3,7 @@ from math import ceil, log2, floor
 from typing import Dict, Iterable
 
 import numpy as np
-from scipy import sparse
+
 from euler.lib.timer import timer
 
 
@@ -39,14 +39,14 @@ class Graph(object):
 
 @timer
 def power(M: np.ndarray, n: int, modulo: int = None):
-    M = sparse.csr_matrix(M)
+    M = M
     if n == 0:
         return M
     power2 = [M]  # power2[k] = M^(2^k)
     k = 1
     while 2 ** k <= n:
         m = power2[k - 1]
-        m2 = sparse.csr_matrix(m.dot(m))
+        m2 = m.dot(m)
         power2.append(m2)
         k += 1
 

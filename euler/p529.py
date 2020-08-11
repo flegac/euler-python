@@ -1,8 +1,10 @@
-from itertools import product
-from typing import Tuple, Set
+from collections import defaultdict
+from fractions import Fraction
+from math import log2
+from typing import Tuple, Set, Mapping
 
 from euler.lib.timer import show_timers
-from euler.prob_529.problem_529 import P529, mirror
+from euler.prob_529.problem_529 import P529
 
 
 def partition(number) -> Set[Tuple[int]]:
@@ -17,12 +19,15 @@ def partition(number) -> Set[Tuple[int]]:
 
 
 def L(n: int, k: int = 1):
-    test = P529(10).full_check
+    problem = P529(10)
 
     A = list(range(k, 10))
-    for w in product(*[A] * n):
-        if test(w):
-            yield w
+    for i in range(10 ** n):
+        if problem.item(i).full_check():
+            yield i
+
+
+M = 1_000_000_007
 
 
 def p529(n: int):
@@ -64,34 +69,63 @@ n=6 [23697, 9045, 1742, 263, 33, 1]
 n=7 [158940, 50979, 7174, 727, 63, 1]
 
     '''
-
     problem = P529(10)
 
+    xx = initial_nodes()
+    next_nodes, word_number = solver(problem)
+
+    last = 0
+    last_frac = -1
+    print('length, nodes, value, ratio')
+
+    n = 10 ** 18
+    k = 1
+    for i in range(2, n):
+        xx = next_nodes(xx)
+        current = last + word_number(xx)
+
+        frac = Fraction(current, last) if last != 0 else 1
+        if i % 2 ** k == 0 or i <= 10:
+            print(i, len(xx), current, frac)
+            k = 1 + int(log2(i))
+
+        if frac == last_frac:
+            break
+        last = current
+        last_frac = frac
+
+
+def initial_nodes():
+    xx = dict()
+    for i in range(1, 10):
+        xx[i] = 1
+    return xx
+
+
+def solver(problem: P529):
     g = problem.build_graph()
+    terminal = list(filter(lambda _: problem.item(_).full_check(), g.vertices))
+    print('vertices:', len(g.vertices), 'terminals:', len(terminal))
 
-    print('vertices:', len(g.vertices))
+    def next_nodes(nodes: Mapping):
+        res = defaultdict(lambda: 0)
+        for v1, kk in nodes.items():
+            for a, v2 in g.graph[v1]:
+                res[v2] += kk
+        return res
 
-    V = list(map(mirror, sorted(map(mirror, g.vertices))))
+    def word_number(nodes: Mapping):
+        tot = 0
+        for v in terminal:
+            tot += nodes.get(v, 0)
+        return tot
 
-    # pour déterminer si deux états sont identiques :
-    # - utiliser la signature (le nombre de VRAI)
-    # - utiliser la dernière partie de somme <= 10
-
-    mat = g.matrix()
-
-    # M = power(mat, 2, 1_000_000_7)
-    # print(M)
-    # tot = 0
-    # for a in problem.A:
-    #     for b in T:
-    #         i = g.vertices.index(a)
-    #         j = g.vertices.index(b)
-    #         val = M[i, j]
-    #         tot += val
-    # print(tot)
+    return next_nodes, word_number
 
 
 if __name__ == '__main__':
-    p529(5)
+    for i in range(2, 6):
+        print(i, len(list(L(i))))
 
+    p529(5)
     show_timers()

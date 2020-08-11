@@ -1,6 +1,7 @@
 from typing import List
 
 from euler.lib.timer import timer
+from euler.prob_529.problem_529 import from_digits
 
 
 class Digit529(object):
@@ -10,8 +11,8 @@ class Digit529(object):
         self.problem = problem
         self.digits = x
 
-    def __str__(self):
-        return ':' + str(self.digits)
+    def __repr__(self):
+        return str(from_digits(self.digits))
 
     def __lt__(self, other):
         return self.digits < other.digits
@@ -44,15 +45,14 @@ class Digit529(object):
     def compute_adjacent(self):
         from euler.prob_529.canonical_form import canonical_form
 
-        res = {self}
+        res = {(0, self)}
         for i in self.problem.A:
             if i == 0:
                 continue
             y = Digit529(self.problem, self.digits + [i])
             if not y._is_impossible():
                 z = canonical_form(y)
-
-                res.add(z)
+                res.add((i, z))
         return res
 
     @timer

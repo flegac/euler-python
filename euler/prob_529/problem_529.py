@@ -1,7 +1,8 @@
 from collections import defaultdict
+from pathlib import Path
 from typing import Iterable
 
-from euler.lib.graph import Graph
+from euler.lib.automat import Automat
 from euler.lib.timer import timer
 
 
@@ -16,24 +17,24 @@ class P529(object):
 
     @timer
     def build_graph(self):
-        # if Path('graph.json').exists():
-        #     return Graph.from_path('graph.json')
+        if Path('automat.json').exists():
+            return Automat.from_path('automat.json')
         gg = defaultdict(list)
         visited = set()
         to_visit = set(map(self.item, self.A))
         while len(to_visit) > 0:
             x = to_visit.pop()
             visited.add(x)
-            for y in x.adjacent:
-                gg[x].append(y)
+            for a, y in x.adjacent:
+                gg[x].append((a, y))
                 if y not in visited:
                     to_visit.add(y)
 
-        g = Graph({
-            from_digits(k.digits): [from_digits(_.digits) for _ in v]
+        g = Automat({
+            from_digits(k.digits): [(a, from_digits(b.digits)) for a, b in v]
             for k, v in gg.items()
         })
-        g.save('graph.json')
+        g.save('automat.json')
         return g
 
 

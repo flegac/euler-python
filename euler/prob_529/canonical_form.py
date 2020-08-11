@@ -47,7 +47,7 @@ def canonical_form(x: Digit529):
     if sign[0] is True and sign[-1] is True:
         z = canonical_all_ok(x)
     elif sign[0] is False and sign[-1] is False:
-        assert False #never happen ... why ?
+        assert False  # never happen ... why ?
         z = canonical_all_ko(x)
     else:
         i = sign.index(False)
