@@ -11,6 +11,9 @@ class P529(object):
         self.A = set(list(range(n)))
         self.N = n
 
+    def terminals(self, a: Automat):
+        return list(filter(lambda _: self.item(_).full_check(), a.states))
+
     def item(self, n: int):
         from euler.prob_529.digit529 import Digit529
         return Digit529(self, digits(n))
@@ -18,7 +21,9 @@ class P529(object):
     @timer
     def build_graph(self, filename='automat.json'):
         if Path(filename).exists():
-            return Automat.from_path(filename)
+            g = Automat.from_path(filename)
+            g.terminals = self.terminals(g)
+            return g
         gg = defaultdict(list)
         visited = set()
         to_visit = set(map(self.item, self.A))
@@ -34,6 +39,7 @@ class P529(object):
             from_digits(k.digits): [(a, from_digits(b.digits)) for a, b in v]
             for k, v in gg.items()
         })
+        g.terminals = self.terminals(g)
         g.save(filename)
         return g
 

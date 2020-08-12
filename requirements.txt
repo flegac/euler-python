@@ -1,2 +1,3 @@
 multiset
 pythomata
+automata-lib

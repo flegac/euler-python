@@ -4,8 +4,6 @@ from math import log2
 from pathlib import Path
 from typing import Dict
 
-from scipy.sparse import dok_matrix
-
 from euler.lib.automat import Automat
 from euler.lib.graph import Graph
 from euler.lib.timer import timer
@@ -24,23 +22,27 @@ class EmptyMatrix(object):
             for j in g0[i]:
                 mat.graph[i][j] += 1
 
-        xx = dict()
-        for i in mat.graph:
-            if i not in xx:
-                xx[i] = list()
-            for j in mat.graph[i]:
-                for _ in range(mat.graph[i][j]):
-                    xx[i].append(j)
+        aa = mat.to_graph()
+        xx = aa.graph
 
         assert xx.keys() == g0.keys()
         for i in xx.keys():
-
             if sorted(xx[i]) != sorted(g0[i]):
                 print(i, xx[i])
                 print(i, g0[i])
 
         assert g.size() == mat.size(), '{} {}'.format(g.size(), mat.size())
         return mat
+
+    def to_graph(self):
+        gg = dict()
+        for i in self.graph:
+            if i not in gg:
+                gg[i] = list()
+            for j in self.graph[i]:
+                for _ in range(self.graph[i][j]):
+                    gg[i].append(j)
+        return Graph(gg)
 
     @staticmethod
     def from_graph(g: Graph):
@@ -88,26 +90,8 @@ class EmptyMatrix(object):
     def __repr__(self):
         return str(self._graph())
 
-    @staticmethod
-    def mult(x: 'EmptyMatrix', y: 'EmptyMatrix'):
-        return compute_empty_mult(x, y)
-
     def size(self):
         return sum(sum(self.graph[x].values()) for x in self.graph)
-
-
-import numpy as np
-
-
-def to_sparse(a: EmptyMatrix, vv: Dict[int, int]):
-    v = list(sorted(vv.keys()))
-    size = len(vv)
-
-    mat = dok_matrix((size, size), dtype=np.uint)
-    for x in a.graph:
-        for y in a.graph[x]:
-            mat[vv[x], vv[y]] = 1
-    return mat
 
 
 @timer
@@ -131,6 +115,19 @@ def compute_empty_mult(a: EmptyMatrix, b: EmptyMatrix):
 
 
 @timer
+def empty_mult(a: EmptyMatrix, b: EmptyMatrix):
+    a = a.graph
+    b = b.graph
+    res = EmptyMatrix()
+    for i in a:
+        for k in set(b).intersection(a[i]):
+            for j in set(b[i]).intersection(b[k]):
+                res.graph[i][j] += a[i][k] * b[k][j]
+
+    return res
+
+
+@timer
 def power_all(path: str, m: EmptyMatrix, n: int):
     if n == 1:
         return m
@@ -145,7 +142,8 @@ def power_all(path: str, m: EmptyMatrix, n: int):
         return x
 
     y = power_all(path, m, n - 2 ** k)
-    res = EmptyMatrix.mult(x, y)
+    # res = empty_mult(x, y)
+    res = compute_empty_mult(x, y)
     res.save(full_path)
     return res
 
@@ -161,6 +159,8 @@ def power2(path: str, m: EmptyMatrix, k: int):
         return m
 
     m_prev = power2(path, m, k - 1)
-    m2 = EmptyMatrix.mult(m_prev, m_prev)
+    # m2 = empty_mult(m_prev, m_prev)
+    m2 = compute_empty_mult(m_prev, m_prev)
+
     m2.save(full_path)
     return m2

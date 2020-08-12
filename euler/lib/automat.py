@@ -2,6 +2,7 @@ import json
 from typing import Dict, Iterable, Tuple
 
 import numpy as np
+from automata.fa.dfa import DFA
 
 from euler.lib.timer import timer
 
@@ -17,35 +18,57 @@ class Automat(object):
             int(k): list(sorted(v, key=lambda _: _[0]))
             for k, v in graph.items()
         }
-        self.vertices = list(self.graph.keys())
+        self.states = list(sorted(self.graph.keys()))
+        self.terminals = None
+        self.initial = 0
 
     def save(self, path: str):
         with open(path, 'w') as _:
             json.dump(self.graph, _, indent=4, sort_keys=True)
 
-    @timer
-    def matrix(self) -> np.ndarray:
-        vertices = self.vertices
-        n = len(self.graph)
-        res = np.zeros((n, n)).astype(np.uint)
-        for a in self.graph:
-            i = vertices.index(a)
-            for _, b in self.graph[a]:
-                j = vertices.index(b)
-                res[i, j] += 1
-        return res
-
     def size(self):
         return sum(len(self.graph[x]) for x in self.graph)
 
 
-def minimize_automat(automat: Automat):
-    # TODO
-    V = automat.vertices
-    n = len(V)
-    sep = np.zeros((n, n))
+@timer
+def matrix(automat: Automat) -> np.ndarray:
+    states = automat.states
+    n = len(automat.graph)
+    res = np.zeros((n, n)).astype(np.uint)
+    for a in automat.graph:
+        i = states.index(a)
+        for _, b in automat.graph[a]:
+            j = states.index(b)
+            res[i, j] += 1
+    return res
 
-    for a in V:
-        for b in V:
-            if automat.graph[a] != automat.graph[b]:
-                sep[a, b] = 1
+
+def minimize(automat: Automat):
+    symbols = set(map(str, list(range(10))))
+
+    def fullfill(l):
+        xx = {
+            str(a): 'black_hole'
+            for a in symbols
+        }
+        for a, v in l:
+            xx[str(a)] = str(v)
+        return xx
+
+    transitions = {
+        str(k): fullfill(l)
+        for k, l in automat.graph.items()
+    }
+    transitions['black_hole'] = fullfill([])
+
+    aa = DFA(
+        states=set(str(_) for _ in [*automat.states, 'black_hole']),
+        input_symbols=symbols,
+        transitions=transitions,
+        initial_state='0',
+        final_states=set(str(_) for _ in automat.terminals)
+    )
+    bb = aa.minify()
+    print('all states:', len(bb.states), bb.states)
+    print('final states:', len(bb.final_states), bb.final_states)
+    return bb

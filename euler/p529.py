@@ -1,5 +1,4 @@
 from euler.lib.timer import show_timers
-from euler.prob_529.empty_matrix import EmptyMatrix, power2, power_all
 from euler.prob_529.p529_solver import P529Solver
 from euler.prob_529.problem_529 import P529
 
@@ -63,19 +62,21 @@ n=7 [158940, 50979, 7174, 727, 63, 1]
 8 1057941
 9 7012665
 10 46402069
+
+[0, 0, 9, 72, 507, 3492, 23697, 158940, 1057941, 7012665, 46402069]
+
     '''
 
     solver = P529Solver()
 
-    count = 0
-    for i in range(2, 7):
-        count = solver.compute_value(i)
-        count2 = solver.value(i)
-        print(i, count, count2)
+    # values1 = [solver.compute_value(_) for _ in range(7)]
+    # print(values1)
 
-    for i, n in enumerate(solver.enumerate(10)):
-        if i >= 2:
-            print(i, n)
+    # values2 = [solver.compute_value2(_) for _ in range(7)]
+    # print(values2)
+
+    for i, x in enumerate(solver.enumerate(10)):
+        print(x)
 
 
 if __name__ == '__main__':
