@@ -16,9 +16,9 @@ class P529(object):
         return Digit529(self, digits(n))
 
     @timer
-    def build_graph(self):
-        if Path('automat.json').exists():
-            return Automat.from_path('automat.json')
+    def build_graph(self, filename='automat.json'):
+        if Path(filename).exists():
+            return Automat.from_path(filename)
         gg = defaultdict(list)
         visited = set()
         to_visit = set(map(self.item, self.A))
@@ -34,7 +34,7 @@ class P529(object):
             from_digits(k.digits): [(a, from_digits(b.digits)) for a, b in v]
             for k, v in gg.items()
         })
-        g.save('automat.json')
+        g.save(filename)
         return g
 
 

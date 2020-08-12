@@ -35,6 +35,9 @@ class Automat(object):
                 res[i, j] += 1
         return res
 
+    def size(self):
+        return sum(len(self.graph[x]) for x in self.graph)
+
 
 def minimize_automat(automat: Automat):
     # TODO

@@ -1,21 +1,7 @@
-from collections import defaultdict
-from fractions import Fraction
-from math import log2
-from typing import Tuple, Set, Mapping
-
 from euler.lib.timer import show_timers
+from euler.prob_529.empty_matrix import EmptyMatrix, power2, power_all
+from euler.prob_529.p529_solver import P529Solver
 from euler.prob_529.problem_529 import P529
-
-
-def partition(number) -> Set[Tuple[int]]:
-    answer = set()
-    answer.add((number,))
-    for x in range(1, number):
-        for y in partition(number - x):
-            answer.add(tuple(((x,) + y)))
-    answer = sorted(answer)
-    answer = sorted(answer, key=lambda x: len(x))
-    return answer
 
 
 def L(n: int, k: int = 1):
@@ -68,64 +54,38 @@ n=5 [3492, 1587, 422, 83, 15, 1]
 n=6 [23697, 9045, 1742, 263, 33, 1]
 n=7 [158940, 50979, 7174, 727, 63, 1]
 
+2 9
+3 72
+4 507
+5 3492
+6 23697
+7 158940
+8 1057941
+9 7012665
+10 46402069
     '''
-    problem = P529(10)
 
-    xx = initial_nodes()
-    next_nodes, word_number = solver(problem)
+    solver = P529Solver()
 
-    last = 0
-    last_frac = -1
-    print('length, nodes, value, ratio')
+    count = 0
+    for i in range(2, 7):
+        count = solver.compute_value(i)
+        count2 = solver.value(i)
+        print(i, count, count2)
 
-    n = 10 ** 18
-    k = 1
-    for i in range(2, n):
-        xx = next_nodes(xx)
-        current = last + word_number(xx)
-
-        frac = Fraction(current, last) if last != 0 else 1
-        if i % 2 ** k == 0 or i <= 10:
-            print(i, len(xx), current, frac)
-            k = 1 + int(log2(i))
-
-        if frac == last_frac:
-            break
-        last = current
-        last_frac = frac
-
-
-def initial_nodes():
-    xx = dict()
-    for i in range(1, 10):
-        xx[i] = 1
-    return xx
-
-
-def solver(problem: P529):
-    g = problem.build_graph()
-    terminal = list(filter(lambda _: problem.item(_).full_check(), g.vertices))
-    print('vertices:', len(g.vertices), 'terminals:', len(terminal))
-
-    def next_nodes(nodes: Mapping):
-        res = defaultdict(lambda: 0)
-        for v1, kk in nodes.items():
-            for a, v2 in g.graph[v1]:
-                res[v2] += kk
-        return res
-
-    def word_number(nodes: Mapping):
-        tot = 0
-        for v in terminal:
-            tot += nodes.get(v, 0)
-        return tot
-
-    return next_nodes, word_number
+    for i, n in enumerate(solver.enumerate(10)):
+        if i >= 2:
+            print(i, n)
 
 
 if __name__ == '__main__':
-    for i in range(2, 6):
-        print(i, len(list(L(i))))
-
     p529(5)
     show_timers()
+
+"""
+B(n) = A + ... + A^n
+
+B(1) = A
+B(n) = B(n / 2) * (I + A^(n / 2)) if n is even
+B(n) = B(n / 2) * (I + A^(n / 2)) + A^n if n is odd
+"""
