@@ -32,15 +32,19 @@ def p529(n: int):
 
     solver = P529Solver(use_mod=False)
 
-    k = 0
-    with open('../resources/p529/logs.txt', 'w') as _:
-        pass
-    for i, x in enumerate(solver.enumerate(12)):
-        if True or i % (2 ** k) == 0:
-            with open('../resources/p529/logs.txt', 'a') as _:
-                _.write('{:5d}: {}\n'.format(i, x))
-            print('{:5d}: {}'.format(i, x))
-            k += 1
+    for i in range(10):
+        v = solver.compute_value(2 ** i)
+        print(v)
+
+    # k = 0
+    # with open('../resources/p529/logs.txt', 'w') as _:
+    #     pass
+    # for i, x in enumerate(solver.enumerate(30)):
+    #     if True or i % (2 ** k) == 0:
+    #         with open('../resources/p529/logs.txt', 'a') as _:
+    #             _.write('{:5d}: {}\n'.format(i, x))
+    #         print('{:5d}: {}'.format(i, x))
+    #         k += 1
 
 
 if __name__ == '__main__':

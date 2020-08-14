@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Set, Tuple, Generator, Any, Callable
 
 import numpy as np
-from automata.fa.dfa import DFA
+from scipy.sparse import lil_matrix
 
 from euler.lib.timer import timer
 
@@ -11,6 +11,14 @@ Edge = Tuple[str, str, str, int]
 
 
 class Automate(object):
+
+    def show_stats(self):
+        print('states:', len(self.S))
+        print('initial:', {self.I})
+        print('terminals:', len(self.T))
+
+        # for i, depth in enumerate(reversed(analyze_graph(self))):
+        #     print('depth {}:'.format(i), len(depth), list(reversed(depth)))
 
     @staticmethod
     def builder():
@@ -57,6 +65,9 @@ class Automate(object):
         self.Q: Dict[str, Dict[str, Dict[str, int]]] = dict()
         self.finalized = False
         self.index = None
+
+    def find(self, s1: str, a: str):
+        return self.Q.get(s1, dict()).get(a, dict())
 
     def compute_terminals(self, is_terminal: Callable[[str], bool]):
         self.T = set(filter(is_terminal, self.S))
@@ -149,41 +160,40 @@ class Automate(object):
             for edge in self.transitions(s1):
                 yield edge
 
-    @timer
-    def update_classes(self, classes: List[List[int]]):
-        # init mapping function :
-        mapping = dict()
-        cc = set()
-        for c in classes:
-            cc.add(c[0])
-            for x in c[1:]:
-                mapping[x] = c[0]
 
-        def f(s):
-            return mapping.get(s, s)
+@timer
+def update_classes(automate: Automate, classes: List[List[int]]):
+    # init mapping function :
+    mapping = dict()
+    cc = set()
+    for c in classes:
+        cc.add(c[0])
+        for x in c[1:]:
+            mapping[x] = c[0]
 
-        # update edges (s1,a,s2,n) --> (s1,a,f(s2),n)
-        Q = Automate.from_scratch()
-        for s1, a, s2, n in self.edges():
-            Q.add(f(s1), a, f(s2), n)
-            Q[f(s1)][a][f(s2)] += n
-        self.Q = Automate.builder_clean(Q)
-        self.I = f(self.I)
-        self.T = set(map(f, self.T))
-        self.validate()
+    def f(s):
+        return mapping.get(s, s)
+
+    # update edges (s1,a,s2,n) --> (s1,a,f(s2),n)
+    Q = Automate.from_scratch()
+    for s1, a, s2, n in automate.edges():
+        Q.add(f(s1), f(s2), f(s2), n)
+    Q.I = f(automate.I)
+    Q.T = set(map(f, automate.T))
+    return Q
 
 
-def analyze_graph(automat: Automate):
-    states = set(automat.states).difference(set(automat.terminals))
-    depths = [set(automat.terminals)]
-    visited = set(depths[-1])
+def analyze_graph(automate: Automate):
+    states = automate.S.difference(automate.T)
+    depths = [automate.T]
+    visited = set(automate.T)
 
     while len(states):
         next_depth = set()
-        for x in states:
-            adjacents = set(y for _, y in automat.graph[x])
-            if adjacents.issubset(visited.union([x])):
-                next_depth.add(x)
+        for s1 in states:
+            adjacents = set(s2 for _, a, s2, n in automate.transitions(s1))
+            if adjacents.issubset(visited.union([s1])):
+                next_depth.add(s1)
         states.difference_update(next_depth)
         depths.append(next_depth)
         visited.update(next_depth)
@@ -206,44 +216,61 @@ def show_graph(graph: Automate, N: int = 100):
 
 
 @timer
-def matrix(automat: Automate) -> np.ndarray:
-    states = automat.states
-    n = len(automat.graph)
-    res = np.zeros((n, n)).astype(np.uint)
-    for a in automat.graph:
-        i = states.index(a)
-        for _, b in automat.graph[a]:
-            j = states.index(b)
-            res[i, j] += 1
-    return res
+def sparse_matrix(automate: Automate) -> np.ndarray:
+    n = len(automate.S)
+    mat = lil_matrix((n, n), dtype=np.uint)
+
+    for v1, _, v2, n in automate.edges():
+        i = automate.index[v1]
+        j = automate.index[v2]
+        mat[i, j] += n
+    return mat.tocsr()
 
 
-def minimize(automat: Automate):
-    symbols = set(map(str, list(range(10))))
-
-    def fullfill(l):
-        xx = {
-            str(a): 'black_hole'
-            for a in symbols
-        }
-        for a, v in l:
-            xx[str(a)] = str(v)
-        return xx
-
-    transitions = {
-        str(k): fullfill(l)
-        for k, l in automat.graph.items()
+def minimize(aut: Automate):
+    F = frozenset(aut.T)
+    Q = frozenset(aut.S)
+    Q_F = frozenset(Q.difference(F))
+    P = {F, Q_F}
+    W = {
+        (min([F, Q_F], key=len), a)
+        for a in aut.A
     }
-    transitions['black_hole'] = fullfill([])
 
-    aa = DFA(
-        states=set(str(_) for _ in [*automat.states, 'black_hole']),
-        input_symbols=symbols,
-        transitions=transitions,
-        initial_state='0',
-        final_states=set(str(_) for _ in automat.terminals)
-    )
-    bb = aa.minify()
-    print('all states:', len(bb.states), bb.states)
-    print('final states:', len(bb.final_states), bb.final_states)
-    return bb
+    while len(W) > 0:
+        Z, a = W.pop()
+        assert sum(map(len,P)) == len(aut.S)
+        P2 = set()
+        for X in P:
+            res = split(aut, Z, a, X)
+            for _ in res:
+                P2.add(_)
+            if len(res) == 2:
+                for b in aut.A:
+                    if (X, b) in W:
+                        W.remove((X, b))
+                        for _ in res:
+                            W.add((_, b))
+                    else:
+                        W.add((min(res, key=len), b))
+        P = P2
+    return None
+
+
+def split(aut: Automate, Z: Set[str], a: str, X: Set[str]):
+    A = set()
+    B = set()
+    for s1 in X:
+        img = aut.find(s1, a)
+        if len(img) == 0:
+            B.add(s1)
+        else:
+            for s2 in img:
+                if s2 in Z:
+                    A.add(s1)
+                else:
+                    B.add(s1)
+    assert len(A) + len(B) == len(X)
+    if len(A) == 0 or len(B) == 0:
+        return [X]
+    return [frozenset(A), frozenset(B)]
