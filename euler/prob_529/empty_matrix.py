@@ -4,14 +4,14 @@ from math import log2
 from pathlib import Path
 from typing import Dict
 
-from euler.lib.automat import Automat
+from euler.lib.automate import Automate
 from euler.lib.graph import Graph
 from euler.lib.timer import timer
 
 
 class EmptyMatrix(object):
     @staticmethod
-    def from_automat(g: Automat):
+    def from_automat(g: Automate):
         g0 = {
             k: [_[1] for _ in v]
             for k, v in g.graph.items()

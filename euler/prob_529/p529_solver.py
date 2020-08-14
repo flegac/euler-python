@@ -4,7 +4,7 @@ from typing import Mapping, Dict
 import numpy as np
 from scipy.sparse import dok_matrix
 
-from euler.lib.automat import analyze_graph, Automat
+from euler.lib.automate import Automate
 from euler.lib.fast_power import fast_power
 from euler.lib.timer import timer
 from euler.prob_529.empty_matrix import EmptyMatrix, power_all
@@ -19,41 +19,34 @@ class P529Solver(object):
     @timer
     def __init__(self, use_mod: bool = False):
         self.use_mod = use_mod
-        problem = P529(10)
-        self.graph = problem.build_graph()
-        self.vv = {
-            v: i
-            for i, v in enumerate(self.verts)
-        }
-        self.mat = EmptyMatrix.from_automat(self.graph)
-        self.sparse = to_sparse(self.mat, self.vv)
+        self.automate = P529(10).build_automate()
+
         print('solver initialized :')
-        print('states:', len(self.graph.states))
-        print('initial:', {self.graph.initial})
-        print('terminals:', len(self.graph.terminals))
+        print('states:', len(self.automate.S))
+        print('initial:', {self.automate.I})
+        print('terminals:', len(self.automate.T))
 
-        for i, depth in enumerate(reversed(analyze_graph(self.graph))):
-            print('depth {}:'.format(i), len(depth), list(reversed(depth)))
+        # for i, depth in enumerate(reversed(analyze_graph(self.automate))):
+        #     print('depth {}:'.format(i), len(depth), list(reversed(depth)))
 
-    @property
-    def verts(self):
-        return self.graph.states
+        # self.mat = EmptyMatrix.from_automat(self.automate)
+        # self.sparse = to_sparse(self.mat, self.automate.index)
 
     @property
     def terminals(self):
-        return self.graph.terminals
+        return self.automate.T
 
     def enumerate(self, n: int):
         xx = P529Solver.SOURCE_NODES
 
-        g2: Automat = None
+        g2: Automate = None
         x2 = None
 
         series = defaultdict(list)
         for i in range(n + 1):
             count = self.word_number(xx)
             yield count
-            xx = self.next_nodes(xx, self.graph)
+            xx = self.next_nodes(xx, self.automate)
             class_number, class_sizes, classes = self.compute_stats(xx)
 
             if g2:
@@ -101,15 +94,15 @@ class P529Solver(object):
         tot = 0
         for v1 in P529Solver.SOURCE_NODES:
             for v2 in self.terminals:
-                tot += mat2.graph[v1].get(v2, 0)
+                tot += mat2.automate[v1].get(v2, 0)
         return tot
 
     @timer
-    def next_nodes(self, nodes: Mapping, graph: Automat):
+    def next_nodes(self, nodes: Mapping, automate: Automate):
         res = defaultdict(lambda: 0)
         for v1 in nodes:
-            for _, v2 in graph.graph[v1]:
-                res[v2] += nodes[v1]
+            for _, a, v2, n in automate.transitions(str(v1)):
+                res[v2] += nodes[v1] * n
                 if self.use_mod:
                     res[v2] %= MOD
         return dict(res)

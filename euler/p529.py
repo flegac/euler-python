@@ -1,3 +1,4 @@
+from euler.lib.timer import show_timers
 from euler.prob_529.p529 import P529
 from euler.prob_529.p529_solver import P529Solver
 
@@ -44,4 +45,4 @@ def p529(n: int):
 
 if __name__ == '__main__':
     p529(5)
-    # show_timers()
+    show_timers()

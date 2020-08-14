@@ -1,8 +1,7 @@
-from collections import defaultdict
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 
-from euler.lib.automat import Automat
+from euler.lib.automate import Automate
 from euler.lib.timer import timer
 
 
@@ -11,35 +10,27 @@ class P529(object):
         self.A = set(list(range(n)))
         self.N = n
 
-    def terminals(self, a: Automat):
-        return list(filter(lambda _: self.item(_).full_check(), a.states))
-
-    def item(self, n: int):
+    def item(self, n: Union[str, int]):
         from euler.prob_529.digit529 import Digit529
-        return Digit529(self, digits(n))
+        return Digit529(self, digits(int(n)))
 
     @timer
-    def build_graph(self, filename='automat.json'):
+    def build_automate(self, filename='automat.json'):
         if Path(filename).exists():
-            g = Automat.from_path(filename)
-            g.terminals = self.terminals(g)
-            return g
-        gg = defaultdict(list)
-        visited = set()
-        to_visit = set(map(self.item, self.A))
-        while len(to_visit) > 0:
-            x = to_visit.pop()
-            visited.add(x)
-            for a, y in x.adjacent:
-                gg[x].append((a, y))
-                if y not in visited:
-                    to_visit.add(y)
+            return Automate.from_path(filename)
 
-        g = Automat({
-            k.value: [(a, b.value) for a, b in v]
-            for k, v in gg.items()
-        })
-        g.terminals = self.terminals(g)
+        g = Automate.from_scratch()
+
+        to_visit = {self.item(0)}
+        while len(to_visit) > 0:
+            s1 = to_visit.pop()
+            for a, s2 in s1.adjacent:
+                if str(s2) not in g.S:
+                    to_visit.add(s2)
+                g.add(str(s1), str(a), str(s2))
+
+        g.I = '0'
+        g.compute_terminals(lambda x: self.item(x).full_check())
         g.save(filename)
         return g
 
