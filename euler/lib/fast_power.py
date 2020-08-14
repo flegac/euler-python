@@ -26,7 +26,9 @@ class FastPower(object):
         if self.path:
             path = self.full_path(n)
             if path.exists():
-                return csr_matrix(np.load(path, allow_pickle=True))
+                res = csr_matrix(np.load(path, allow_pickle=True))
+                self.cache[n] = res
+                return res
 
         k = n // 2
         a = self.power(k)

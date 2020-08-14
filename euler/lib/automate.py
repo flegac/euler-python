@@ -174,10 +174,21 @@ def update_classes(automate: Automate, classes: List[List[int]]):
     def f(s):
         return mapping.get(s, s)
 
+    # check all
+    for s1, a, s2, n in automate.edges():
+        items = automate.find(f(s1), a)
+
+        if f(s2) not in set(map(f, items)):
+            print('-----------------------------------------------------------')
+            print('error on:', f(s1), a, f(s2), n)
+            print('found   :', items)
+            raise ValueError
+
     # update edges (s1,a,s2,n) --> (s1,a,f(s2),n)
     Q = Automate.from_scratch()
     for s1, a, s2, n in automate.edges():
-        Q.add(f(s1), f(s2), f(s2), n)
+        if not Q.find(f(s1), a):
+            Q.add(f(s1), a, f(s2), n)
     Q.I = f(automate.I)
     Q.T = set(map(f, automate.T))
     return Q
@@ -239,7 +250,7 @@ def minimize(aut: Automate):
 
     while len(W) > 0:
         Z, a = W.pop()
-        assert sum(map(len,P)) == len(aut.S)
+        assert sum(map(len, P)) == len(aut.S)
         P2 = set()
         for X in P:
             res = split(aut, Z, a, X)

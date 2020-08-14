@@ -30,16 +30,19 @@ def p529(n: int):
 [0, 0, 9, 72, 507, 3492, 23697, 158940, 1057941, 7012665, 46402069]
     '''
 
-    solver = P529Solver(use_mod=False)
+    solver = P529Solver(use_mod=True)
 
-    for i in range(10):
-        v = solver.compute_value(2 ** i)
-        print(v)
+    v = solver.compute_value(10 ** 18)
+    print('solve(10**18):', v)
 
     # k = 0
     # with open('../resources/p529/logs.txt', 'w') as _:
     #     pass
-    # for i, x in enumerate(solver.enumerate(30)):
+    # for i, x in enumerate(solver.enumerate(512)):
+    #
+    #     v = solver.compute_value(i)
+    #     assert v == x, '{}: mat_power:{} != mat_apply:{}'.format(i, v, x)
+    #
     #     if True or i % (2 ** k) == 0:
     #         with open('../resources/p529/logs.txt', 'a') as _:
     #             _.write('{:5d}: {}\n'.format(i, x))
