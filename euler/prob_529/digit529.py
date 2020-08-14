@@ -1,18 +1,18 @@
 from typing import List
 
 from euler.lib.timer import timer
-from euler.prob_529.problem_529 import from_digits
+from euler.prob_529.p529 import from_digits
 
 
 class Digit529(object):
-    from euler.prob_529.problem_529 import P529
+    from euler.prob_529.p529 import P529
 
     def __init__(self, problem: P529, x: List[int]):
         self.problem = problem
         self.digits = x
 
     def __repr__(self):
-        return str(from_digits(self.digits))
+        return str(self.value)
 
     def __lt__(self, other):
         return self.digits < other.digits
@@ -22,6 +22,10 @@ class Digit529(object):
 
     def __eq__(self, other):
         return self.digits == other.digits
+
+    @property
+    def value(self):
+        return from_digits(self.digits)
 
     def slice(self, first: int = 0, last: int = None):
         if last:

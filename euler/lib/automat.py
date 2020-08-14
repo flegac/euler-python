@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple, List
 
 import numpy as np
 from automata.fa.dfa import DFA
@@ -28,6 +28,57 @@ class Automat(object):
 
     def size(self):
         return sum(len(self.graph[x]) for x in self.graph)
+
+    @timer
+    def update_classes(self, classes: List[List[int]]):
+        # init mapping
+        mapping = dict()
+        cc = set()
+        for c in classes:
+            cc.add(c[0])
+            for x in c[1:]:
+                mapping[x] = c[0]
+
+        for s in mapping:
+            del self.graph[s]
+
+        for s, l in self.graph.items():
+            for e in l:
+                e[1] = mapping.get(e[1], e[1])
+
+        self.states = list(sorted(self.graph.keys()))
+
+
+def analyze_graph(automat: Automat):
+    states = set(automat.states).difference(set(automat.terminals))
+    depths = [set(automat.terminals)]
+    visited = set(depths[-1])
+
+    while len(states):
+        next_depth = set()
+        for x in states:
+            adjacents = set(y for _, y in automat.graph[x])
+            if adjacents.issubset(visited.union([x])):
+                next_depth.add(x)
+        states.difference_update(next_depth)
+        depths.append(next_depth)
+        visited.update(next_depth)
+
+    return list(map(list, map(sorted, depths)))
+
+
+@timer
+def show_graph(graph: Automat, N: int = 100):
+    from graphviz import Digraph
+    dot = Digraph(comment='p529')
+
+    for x in graph.states[:N]:
+        dot.node(str(x), str(x))
+    for x in graph.states[:N]:
+        for a, y in graph.graph[x]:
+            if y in graph.states[:N]:
+                dot.edge(str(x), str(y))
+    dot.render('test-output/p259_{}.gv'.format(N), view=True)
 
 
 @timer

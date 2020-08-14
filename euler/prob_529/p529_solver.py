@@ -4,10 +4,11 @@ from typing import Mapping, Dict
 import numpy as np
 from scipy.sparse import dok_matrix
 
+from euler.lib.automat import analyze_graph, Automat
 from euler.lib.fast_power import fast_power
 from euler.lib.timer import timer
 from euler.prob_529.empty_matrix import EmptyMatrix, power_all
-from euler.prob_529.problem_529 import P529
+from euler.prob_529.p529 import P529
 
 MOD = 1_000_000_007
 
@@ -16,10 +17,10 @@ class P529Solver(object):
     SOURCE_NODES = {0: 1}
 
     @timer
-    def __init__(self):
+    def __init__(self, use_mod: bool = False):
+        self.use_mod = use_mod
         problem = P529(10)
         self.graph = problem.build_graph()
-
         self.vv = {
             v: i
             for i, v in enumerate(self.verts)
@@ -27,13 +28,16 @@ class P529Solver(object):
         self.mat = EmptyMatrix.from_automat(self.graph)
         self.sparse = to_sparse(self.mat, self.vv)
         print('solver initialized :')
-        print('initial:', self.graph.initial)
-        print('terminals:', len(self.graph.terminals))
         print('states:', len(self.graph.states))
+        print('initial:', {self.graph.initial})
+        print('terminals:', len(self.graph.terminals))
+
+        for i, depth in enumerate(reversed(analyze_graph(self.graph))):
+            print('depth {}:'.format(i), len(depth), list(reversed(depth)))
 
     @property
     def verts(self):
-        return  self.graph.states
+        return self.graph.states
 
     @property
     def terminals(self):
@@ -41,13 +45,53 @@ class P529Solver(object):
 
     def enumerate(self, n: int):
         xx = P529Solver.SOURCE_NODES
+
+        g2: Automat = None
+        x2 = None
+
+        series = defaultdict(list)
         for i in range(n + 1):
             count = self.word_number(xx)
             yield count
-            last = xx
-            xx = self.next_nodes(xx)
-            if last == xx:
-                break
+            xx = self.next_nodes(xx, self.graph)
+            class_number, class_sizes, classes = self.compute_stats(xx)
+
+            if g2:
+                x2 = self.next_nodes(x2, g2)
+                count2 = self.word_number(x2)
+                print('------------------------------------------')
+                print(count)
+                print(count2)
+                # stats = {
+                #     c[0]: xx[c[0]]
+                #     for c in classes
+                # }
+                # for c in stats:
+                #     series[c].append(stats[c])
+
+            # if class_number == 2816 and not g2:
+            #     x2 = {
+            #         int(c[0]): xx[c[0]] * len(c)
+            #         for c in classes
+            #     }
+            #
+            #     g2 = P529(10).build_graph('automat.json')
+            #     g2.update_classes(classes)
+            #     g2.save('automat2.json')
+
+        # with open('series.txt', 'w') as _:
+        #     for c in sorted(series, key=lambda x: series[x][0]):
+        #         _.write('{:20} {}\n'.format(c, series[c]))
+
+    def compute_stats(self, xx):
+        stats = defaultdict(list)
+        for k, v in xx.items():
+            stats[v].append(k)
+        stats = dict(stats)
+        class_number = len(stats)
+        classes = list(sorted(stats.values(), key=lambda x: len(x), reverse=True))
+        class_sizes = list(map(len, classes))
+        return class_number, class_sizes, classes
 
     @timer
     def compute_value2(self, n: int):
@@ -61,20 +105,22 @@ class P529Solver(object):
         return tot
 
     @timer
-    def next_nodes(self, nodes: Mapping):
+    def next_nodes(self, nodes: Mapping, graph: Automat):
         res = defaultdict(lambda: 0)
         for v1 in nodes:
-            for _, v2 in self.graph.graph[v1]:
+            for _, v2 in graph.graph[v1]:
                 res[v2] += nodes[v1]
-                res[v2] %= MOD
-        return res
+                if self.use_mod:
+                    res[v2] %= MOD
+        return dict(res)
 
     @timer
     def word_number(self, nodes: Mapping):
         tot = 0
         for v in self.terminals:
             tot += nodes.get(v, 0)
-        tot %= MOD
+        if self.use_mod:
+            tot %= MOD
         return tot
 
     @timer

@@ -36,7 +36,7 @@ class P529(object):
                     to_visit.add(y)
 
         g = Automat({
-            from_digits(k.digits): [(a, from_digits(b.digits)) for a, b in v]
+            k.value: [(a, b.value) for a, b in v]
             for k, v in gg.items()
         })
         g.terminals = self.terminals(g)

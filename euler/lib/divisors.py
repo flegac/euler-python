@@ -6,4 +6,4 @@ def divisors(n: int):
     for i in range(1, ceil(sqrt(n))):
         if n % i == 0:
             res.update([i, n // i])
-    return res
+    return list(sorted(res))

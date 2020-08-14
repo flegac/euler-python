@@ -1,3 +1,5 @@
+import json
+
 from euler.lib.timer import timer
 from euler.prob_529.digit529 import Digit529
 
@@ -30,6 +32,13 @@ def canonical_mixed(valid: Digit529, invalid: Digit529):
         return invalid
     z = Digit529(valid.problem, canonical_all_ok(valid).digits + invalid.digits)
     return z
+
+
+with open('../resources/p529/classes.json') as _:
+    CLASSES = {
+        int(k): list(sorted(map(int, l)))
+        for k, l in json.load(_).items()
+    }
 
 
 @timer
