@@ -2,9 +2,11 @@ import json
 from collections import defaultdict
 from typing import Mapping
 
+import numpy as np
 from scipy.sparse import csr_matrix
 
-from euler.lib.automate import Automate, sparse_matrix, update_classes, minimize
+from euler.lib.automate import Automate
+from euler.lib.automate_minimize import update_classes
 from euler.lib.fast_power import FastPower
 from euler.lib.timer import timer
 from euler.prob_529.p529 import P529
@@ -22,6 +24,8 @@ class P529Solver(object):
         print('solver initialized :')
         self.automate.show_stats()
 
+        # partition = minimize(self.automate)
+
         with open('../resources/p529/partitions.json') as _:
             parts = json.load(_)
         print('partition:', len(parts))
@@ -31,24 +35,9 @@ class P529Solver(object):
         self.automate.save('automat_small.json')
         self.automate.show_stats()
 
-        xx = minimize(self.automate)
+        self.matrix = self.automate.to_matrix()
 
-        @timer
-        def matrix_mult(a, b):
-            x = a.dot(b)
-            if use_mod:
-                x = x.todense()
-                x %= MOD
-                x = csr_matrix(x)
-            try:
-                print('matrix.size:', x.nnz)
-            except:
-                pass
-
-            return x
-
-        self.matrix = sparse_matrix(self.automate)
-        self.mat_power = FastPower(self.matrix, matrix_mult, path='../resources/p529/mat')
+        # show_automate(self.automate, N=100)
 
     @property
     def terminals(self):
@@ -73,23 +62,39 @@ class P529Solver(object):
 
     @timer
     def word_number(self, nodes: Mapping):
-        tot = 0
+        tot = np.array([0]).astype(np.uint64)
         for v in self.terminals:
             tot += nodes.get(v, 0)
             if self.use_mod:
                 tot %= MOD
-        return tot
+        return tot[0]
 
     @timer
-    def compute_value(self, n: int):
+    def compute_value(self, n: int, cache_path: str = '../resources/p529/mat'):
+        if self.use_mod:
+            cache_path += 'mod'
+
         if n == 0:
             return 0
 
-        mat2 = self.mat_power.power(n)
-        tot = 0
+        @timer
+        def matrix_mult(a, b):
+            if self.use_mod:
+                a %= MOD
+                b %= MOD
+            a = csr_matrix(a).astype(np.uint64)
+            b = csr_matrix(b).astype(np.uint64)
+            x = a.dot(b).todense().astype(np.uint64)
+            if self.use_mod:
+                x %= MOD
+            return x
+
+        mat2 = FastPower(self.matrix, matrix_mult, path=cache_path).power(n)
+
+        tot = np.array([0]).astype(np.uint64)
         for v1 in P529Solver.SOURCE_NODES:
             for v2 in self.terminals:
                 tot += mat2[self.automate.index[v1], self.automate.index[v2]]
                 if self.use_mod:
                     tot %= MOD
-        return tot
+        return tot[0]

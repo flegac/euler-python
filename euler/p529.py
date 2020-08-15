@@ -32,22 +32,24 @@ def p529(n: int):
 
     solver = P529Solver(use_mod=True)
 
-    v = solver.compute_value(10 ** 18)
-    print('solve(10**18):', v)
+    # v = solver.compute_value(10 ** 18)
+    # print('-----------------------------------------')
+    # print('solve(10**18):', v)
+    # print('-----------------------------------------')
 
-    # k = 0
-    # with open('../resources/p529/logs.txt', 'w') as _:
-    #     pass
-    # for i, x in enumerate(solver.enumerate(512)):
-    #
-    #     v = solver.compute_value(i)
-    #     assert v == x, '{}: mat_power:{} != mat_apply:{}'.format(i, v, x)
-    #
-    #     if True or i % (2 ** k) == 0:
-    #         with open('../resources/p529/logs.txt', 'a') as _:
-    #             _.write('{:5d}: {}\n'.format(i, x))
-    #         print('{:5d}: {}'.format(i, x))
-    #         k += 1
+    k = 0
+    with open('../resources/p529/logs.txt', 'w') as _:
+        pass
+    for i, x in enumerate(solver.enumerate(512)):
+
+        if True or i % (2 ** k) == 0:
+            # v = solver.compute_value(i)
+            # assert v == x, '{}: mat_power:{} != mat_apply:{}'.format(i, v, x)
+
+            with open('../resources/p529/logs.txt', 'a') as _:
+                _.write('{:5d}: {}\n'.format(i, x))
+            print('{:5d}: {}'.format(i, x))
+            k += 1
 
 
 if __name__ == '__main__':

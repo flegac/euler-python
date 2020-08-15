@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Callable, Any
 
 import numpy as np
-from scipy.sparse import csr_matrix
 
 
 class FastPower(object):
@@ -26,7 +25,7 @@ class FastPower(object):
         if self.path:
             path = self.full_path(n)
             if path.exists():
-                res = csr_matrix(np.load(path, allow_pickle=True))
+                res = np.load(path, allow_pickle=True).astype(np.uint64)
                 self.cache[n] = res
                 return res
 
@@ -37,6 +36,6 @@ class FastPower(object):
         self.cache[n] = res
 
         if self.path:
-            res.todense().dump(self.full_path(n))
+            res.astype(np.uint64).dump(self.full_path(n))
 
         return res
