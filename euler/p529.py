@@ -104,6 +104,6 @@ if __name__ == '__main__':
         print('***** computing:', args)
         pool = Pool(2)
         res = pool.map(power, args)
-        print('***** result:',args,  res)
+        print('***** result:', args, res)
         pool.close()
         pool.join()

@@ -78,6 +78,21 @@ class P529Solver(object):
             return 0
 
         @timer
+        def flint_matmult(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+            from flint import nmod_mat, fmpz_mat
+            if self.use_mod:
+                a = nmod_mat(a.tolist(), MOD)
+                b = nmod_mat(b.tolist(), MOD)
+            else:
+                a = fmpz_mat(a.tolist())
+                b = fmpz_mat(b.tolist())
+
+            y = a * b
+            z = [list(map(int, _.strip('][').split(','))) for _ in str(y).split('\n')]
+            res = np.array(z, dtype=np.uint64)
+            return res
+
+        @timer
         def matrix_mult(a, b):
             # use dtype=object for unlimited precision
             a = a.astype(object)
@@ -98,7 +113,7 @@ class P529Solver(object):
                 x = x.astype(np.uint64)
             return x
 
-        mat2 = FastPower(self.matrix, matrix_mult, path=cache_path).power(n)
+        mat2 = FastPower(self.matrix, flint_matmult, path=cache_path).power(n)
 
         tot = np.array([0]).astype(object)
         for v1 in P529Solver.SOURCE_NODES:
