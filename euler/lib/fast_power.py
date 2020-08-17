@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Any
+from typing import Callable, Any, Set, Dict
 
 import numpy as np
 
@@ -14,6 +14,17 @@ class FastPower(object):
     def full_path(self, n):
         return Path('{}/{}.dat'.format(self.path, n))
 
+    def requirements(self, n: int, cache: Dict[int, Set[int]] = None):
+        if cache is None:
+            cache = {1: {1}}
+        a = n // 2
+        b = n - a
+        x = cache.get(a, None) or self.requirements(a, cache)
+        y = cache.get(b, None) or self.requirements(b, cache)
+        res = {n, *x, *y}
+        cache[n] = res
+        return res
+
     def power(self, n: int):
         if n == 0:
             raise ValueError
@@ -25,7 +36,7 @@ class FastPower(object):
         if self.path:
             path = self.full_path(n)
             if path.exists():
-                res = np.load(path, allow_pickle=True).astype(np.uint64)
+                res = np.load(path, allow_pickle=True)
                 self.cache[n] = res
                 return res
 

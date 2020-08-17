@@ -3,7 +3,6 @@ from collections import defaultdict
 from typing import Mapping
 
 import numpy as np
-from scipy.sparse import csr_matrix
 
 from euler.lib.automate import Automate
 from euler.lib.automate_minimize import update_classes
@@ -37,7 +36,7 @@ class P529Solver(object):
 
         self.matrix = self.automate.to_matrix()
 
-        # show_automate(self.automate, N=100)
+        # show_automate(self.automate,path='../resources/p529/graphics/', N=100)
 
     @property
     def terminals(self):
@@ -62,7 +61,7 @@ class P529Solver(object):
 
     @timer
     def word_number(self, nodes: Mapping):
-        tot = np.array([0]).astype(np.uint64)
+        tot = np.array([0]).astype(object)
         for v in self.terminals:
             tot += nodes.get(v, 0)
             if self.use_mod:
@@ -71,6 +70,7 @@ class P529Solver(object):
 
     @timer
     def compute_value(self, n: int, cache_path: str = '../resources/p529/mat'):
+
         if self.use_mod:
             cache_path += 'mod'
 
@@ -79,19 +79,28 @@ class P529Solver(object):
 
         @timer
         def matrix_mult(a, b):
+            # use dtype=object for unlimited precision
+            a = a.astype(object)
+            b = b.astype(object)
+
             if self.use_mod:
                 a %= MOD
                 b %= MOD
-            a = csr_matrix(a).astype(np.uint64)
-            b = csr_matrix(b).astype(np.uint64)
-            x = a.dot(b).todense().astype(np.uint64)
+            # Much faster : but bug with some big integer (even with modulo)
+            # a = csr_matrix(a.astype(np.uint64))
+            # b = csr_matrix(b.astype(np.uint64))
+
+            x = a.dot(b)
+            # x = x.todense()
             if self.use_mod:
+                x = x.astype(object)
                 x %= MOD
+                x = x.astype(np.uint64)
             return x
 
         mat2 = FastPower(self.matrix, matrix_mult, path=cache_path).power(n)
 
-        tot = np.array([0]).astype(np.uint64)
+        tot = np.array([0]).astype(object)
         for v1 in P529Solver.SOURCE_NODES:
             for v2 in self.terminals:
                 tot += mat2[self.automate.index[v1], self.automate.index[v2]]

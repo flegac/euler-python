@@ -183,7 +183,7 @@ def analyze_graph(automate: Automate):
 
 
 @timer
-def show_automate(aut: Automate, N: int = 500):
+def show_automate(aut: Automate, path: str, N: int = 500):
     from graphviz import Digraph
     dot = Digraph(comment='p529')
 
@@ -197,4 +197,4 @@ def show_automate(aut: Automate, N: int = 500):
             continue
         if s1 in S and s2 in S:
             dot.edge(s1, s2)
-    dot.render('test-output/p259_{}.gv'.format(N), view=True)
+    dot.render('{}_{}.gv'.format(path, N), view=True)

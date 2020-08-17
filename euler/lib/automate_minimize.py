@@ -10,6 +10,9 @@ def freeze(x):
 
 @timer
 def minimize(aut: Automate):
+    """
+    https://fr.wikipedia.org/wiki/Algorithme_de_Hopcroft_de_minimisation_d%27un_automate_fini
+    """
     # TODO: optimize encoding of sets
     F = freeze(aut.T)
     Q = freeze(aut.S)
