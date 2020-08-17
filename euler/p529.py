@@ -1,5 +1,6 @@
 from multiprocessing import Pool
 
+from euler.lib.timer import show_timers, timer
 from euler.prob_529.p529 import P529
 from euler.prob_529.p529_solver import P529Solver
 
@@ -67,21 +68,20 @@ def p529(n: int):
     #         _.write('{:5d}: {}\n'.format(i, x))
     #     print('{:5d}: {}'.format(i, x))
 
+
 solver = P529Solver(use_mod=True)
-def power(n:int):
+def power(n: int):
     return solver.compute_value(n)
 
-if __name__ == '__main__':
-    # try:
-    #     p529(5)
-    # finally:
-    #     show_timers()
 
-
-    data3 = [
+@timer
+def solve_it():
+    plan = [
         (2,),
 
-        (4, 3), (7, 6), (14, 13), (28, 27), (56, 55), (112, 111), (223, 222), (445, 444), (889, 888), (1777, 1776),
+        (4, 3), (7, 6), (14, 13), (28, 27),
+
+        (56, 55), (112, 111), (223, 222), (445, 444), (889, 888), (1777, 1776),
         (3553, 3552), (7106, 7105), (14211, 14210), (28422, 28421), (56844, 56843), (113687, 113686),
 
         (227374, 227373), (454748, 454747), (909495, 909494), (1818990, 1818989), (3637979, 3637978),
@@ -97,13 +97,18 @@ if __name__ == '__main__':
         (3906250000000000,), (7812500000000000,), (15625000000000000,), (31250000000000000,), (62500000000000000,),
         (125000000000000000,), (250000000000000000,), (500000000000000000,), (1000000000000000000,)
     ]
-
-
-
-    for args in data3:
+    for args in plan:
         print('***** computing:', args)
         pool = Pool(2)
         res = pool.map(power, args)
         print('***** result:', args, res)
         pool.close()
         pool.join()
+
+
+if __name__ == '__main__':
+    try:
+        p529(5)
+        # solve_it()
+    finally:
+        show_timers()

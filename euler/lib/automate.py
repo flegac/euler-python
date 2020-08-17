@@ -97,10 +97,10 @@ class Automate(object):
                     error(s2 in self.S, 's2 states is not in S : (s1:{}, a:{}, s2:{}, n:{})'.format(s1, a, s2, n))
                     error(n > 0, 'Transition must be in A')
 
-        warning(len(missing_transitions) == 0,
-                'Missing transitions: {}'.format(missing_transitions))
-        warning(len(probabilistic_transitions) == 0,
-                'Automat is probabilistic: {}'.format(probabilistic_transitions))
+        # warning(len(missing_transitions) == 0,
+        #         'Missing transitions: {}'.format(missing_transitions))
+        # warning(len(probabilistic_transitions) == 0,
+        #         'Automat is probabilistic: {}'.format(probabilistic_transitions))
 
         self.index = {
             v: i

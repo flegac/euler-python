@@ -20,19 +20,19 @@ class P529Solver(object):
     def __init__(self, use_mod: bool = False):
         self.use_mod = use_mod
         self.automate = P529(10).build_automate()
-        print('solver initialized :')
-        self.automate.show_stats()
+        # print('solver initialized :')
+        # self.automate.show_stats()
 
         # partition = minimize(self.automate)
 
         with open('../resources/p529/partitions.json') as _:
             parts = json.load(_)
-        print('partition:', len(parts))
+        # print('partition:', len(parts))
         parts = list(parts.values())
 
         self.automate = update_classes(self.automate, parts)
         self.automate.save('automat_small.json')
-        self.automate.show_stats()
+        # self.automate.show_stats()
 
         self.matrix = self.automate.to_matrix()
 
